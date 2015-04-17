@@ -91,6 +91,11 @@ void SerialTypeA::mainLoop()
 {
     bool quit = false;
 
+    int azval = 0;
+    int elval = 0;
+
+    sf::Clock transclock;
+
     while(!quit)
     {
         sf::Event event;
@@ -98,6 +103,32 @@ void SerialTypeA::mainLoop()
         screen->clear();
 
         //handle key presses/releases outside of events
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+        {
+            elval = 127;
+        }
+        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+        {
+            elval = -128;
+        }
+        else elval = 0;
+
+        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+        {
+            azval = -128;
+        }
+        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+        {
+            azval = 127;
+        }
+        else azval = 0;
+
+
+        debugTransPressed();
+        debugTransForced();
+        debugTransAz(azval);
+        debugTransEl(elval);
+        debugTransReleased();
 
 
         //handle events
@@ -173,6 +204,11 @@ void SerialTypeA::listenOnActivePort()
             {
                 ofile << std::endl;
 
+                if(int(packet[1]) == 0x83)
+                {
+                    //if(isBitHigh(packet[2],9)) std::cout << "MENU ON\n";
+                }
+
                 printPacket(&packet);
                 packet.clear();
             }
@@ -183,6 +219,16 @@ void SerialTypeA::listenOnActivePort()
 
 
     }
+}
+
+bool SerialTypeA::isBitHigh(uint8_t byte, int bitnum)
+{
+    int mask = std::pow(2,bitnum);
+
+    std::cout << "mask=" << mask << " - && - " << int(mask&&int(byte)) << std::endl;
+
+
+    return mask&&int(byte);
 }
 
 void SerialTypeA::printPacket(std::vector<uint8_t> *tpacket)
@@ -333,6 +379,45 @@ void SerialTypeA::debugTransReleased()
     packet.push_back(0x2B);
     packet.push_back(0x10);
     packet.push_back(0x03);
+
+    for(int i = 0; i < int(packet.size()); i++)
+    {
+        activePort->writeToSerialPort(&packet[i], sizeof(uint8_t));
+    }
+}
+
+void SerialTypeA::debugTransAz(int val)
+{
+
+    if(activePort==NULL) return;
+
+    //(10) (27) (01) (7F) (A7) (10) (03) Az_Rate = 127 (8 bit 2’s complement)
+    std::vector<uint8_t> packet;
+    packet.push_back(0x27);
+    packet.push_back(0x01);
+    packet.push_back(val);
+
+    packet = constructPacketFromData(packet);
+
+    for(int i = 0; i < int(packet.size()); i++)
+    {
+        activePort->writeToSerialPort(&packet[i], sizeof(uint8_t));
+    }
+}
+
+
+void SerialTypeA::debugTransEl(int val)
+{
+
+    if(activePort==NULL) return;
+
+    //(10) (27) (01) (7F) (A7) (10) (03) Az_Rate = 127 (8 bit 2’s complement)
+    std::vector<uint8_t> packet;
+    packet.push_back(0x26);
+    packet.push_back(0x01);
+    packet.push_back(val);
+
+    packet = constructPacketFromData(packet);
 
     for(int i = 0; i < int(packet.size()); i++)
     {

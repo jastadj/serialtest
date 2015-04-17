@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <fstream>
 #include <vector>
+#include <cmath>
 
 #include <SFML\Graphics.hpp>
 #include "serialport.hpp"
@@ -35,6 +36,7 @@ private:
     sf::Thread *listenOnPortThread;
 
     //data
+    bool menuOpen;
     //used to construct packet full packet with data only, no DLEs or checksums should be in input
     std::vector<uint8_t> constructPacketFromData(std::vector<uint8_t> datap);
     //calculate checksum from data only
@@ -53,10 +55,15 @@ private:
     void debugTransForced();
     void debugTransPressed();
     void debugTransReleased();
+    void debugTransAz(int val);
+    void debugTransEl(int val);
+
     void debugUp();
     void debugDown();
     void debugLeft();
     void debugRight();
+
+    bool isBitHigh(uint8_t byte, int bitnum);
 
 public:
     SerialTypeA();
