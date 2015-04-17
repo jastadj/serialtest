@@ -3,8 +3,19 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <iomanip>
 
 DWORD readFromSerialPort(HANDLE hSerial, uint8_t * buffer, int buffersize)
+{
+    DWORD dwBytesRead = 0;
+    if(!ReadFile(hSerial, buffer, buffersize, &dwBytesRead, NULL))
+    {
+        //handle error
+    }
+    return dwBytesRead;
+}
+
+DWORD readFromSerialPort(HANDLE hSerial, char *buffer, int buffersize)
 {
     DWORD dwBytesRead = 0;
     if(!ReadFile(hSerial, buffer, buffersize, &dwBytesRead, NULL))
@@ -29,7 +40,7 @@ DWORD writeToSerialPort(HANDLE hSerial, uint8_t * data, int length)
 int main(int argc, char *argv[])
 {
     //enumerate com ports
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i <= 10 ; i++)
     {
         std::stringstream comname;
         comname << "\\\\.\\COM" << i;
@@ -37,15 +48,15 @@ int main(int argc, char *argv[])
 
         HANDLE hComm;
         COMMTIMEOUTS commtimeouts;
-        commtimeouts.ReadIntervalTimeout = 1000;
-        commtimeouts.ReadTotalTimeoutConstant = 1000;
-        commtimeouts.ReadTotalTimeoutMultiplier = 1000;
-        commtimeouts.WriteTotalTimeoutConstant = 1000;
-        commtimeouts.WriteTotalTimeoutMultiplier = 1000;
+        commtimeouts.ReadIntervalTimeout = 2;
+        commtimeouts.ReadTotalTimeoutConstant = 2;
+        commtimeouts.ReadTotalTimeoutMultiplier = 2;
+        commtimeouts.WriteTotalTimeoutConstant = 2;
+        commtimeouts.WriteTotalTimeoutMultiplier = 2;
 
         DWORD commevents =EV_RXCHAR | EV_CTS;
 
-        hComm = CreateFileA( comname.str().c_str(),
+        hComm = CreateFile( comname.str().c_str(),
                             GENERIC_READ | GENERIC_WRITE,
                             0,
                             NULL,
@@ -102,6 +113,26 @@ int main(int argc, char *argv[])
             }
 
 
+            if(i == 2) std::cout << "Starting COM" << i << " listen...\n\n";
+
+
+            while(i == 2)
+            {
+                uint8_t mybuffer;
+                char mybuf[32] = {0};
+
+                //DWORD mydword = readFromSerialPort(hComm, mybuf, 32);
+                DWORD mydword = readFromSerialPort(hComm, &mybuffer, sizeof(uint8_t));
+
+                if(mydword)
+                {
+                    std::cout << std::dec;
+                    std::cout << "DWORD:" << mydword << " data: " << int(mybuffer) << "  - 0x";
+                    if(int(mybuffer) < 10) std::cout << "0";
+                    std::cout << std::hex << int(mybuffer)  << std::endl;
+                }
+
+            }
 
 
 
