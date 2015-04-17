@@ -112,23 +112,3 @@ DWORD SerialPort::writeToSerialPort(uint8_t *data, int buffersize)
 	return dwBytesRead;
 
 }
-
-void SerialPort::debugCage()
-{
-    //(10) (48) (01) (01) (4A) (10) (03) CAGE MODE
-    std::vector<uint8_t> packet;
-
-    packet.push_back(0x10);
-    packet.push_back(0x48);
-    packet.push_back(0x01);
-    packet.push_back(0x01);
-    packet.push_back(0x4a);
-    packet.push_back(0x10);
-    packet.push_back(0x03);
-
-    for(int i = 0; i < int(packet.size()); i++)
-    {
-        writeToSerialPort(&packet[i], sizeof(uint8_t));
-    }
-
-}

@@ -34,10 +34,29 @@ private:
     //threads
     sf::Thread *listenOnPortThread;
 
+    //data
+    //used to construct packet full packet with data only, no DLEs or checksums should be in input
+    std::vector<uint8_t> constructPacketFromData(std::vector<uint8_t> datap);
+    //calculate checksum from data only
+    uint8_t calculateChecksumFromData(std::vector<uint8_t> datap);
+
     //loops
     bool alive;
     void mainLoop();
     void listenOnActivePort();
+
+
+    //debug
+    void debugCage();
+    void debugMenuToggle();
+    void debugExecute();
+    void debugTransForced();
+    void debugTransPressed();
+    void debugTransReleased();
+    void debugUp();
+    void debugDown();
+    void debugLeft();
+    void debugRight();
 
 public:
     SerialTypeA();

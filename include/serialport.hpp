@@ -29,8 +29,6 @@ public:
 
     bool isValid() { if(m_hComm != INVALID_HANDLE_VALUE) return true; else return false;}
 
-    void debugCage();
-
 };
 
 #endif // CLASS_SERIALPORT
