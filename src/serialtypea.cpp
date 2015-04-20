@@ -90,11 +90,14 @@ uint8_t SerialTypeA::calculateChecksumFromData(std::vector<uint8_t> datap)
 void SerialTypeA::mainLoop()
 {
     bool quit = false;
+    int deadzonestate = 0;
 
     int azval = 0;
     int elval = 0;
 
     sf::Clock transclock;
+
+    sf::Mouse::setPosition(sf::Vector2i(128,128), *screen);
 
     while(!quit)
     {
@@ -181,6 +184,8 @@ void SerialTypeA::mainLoop()
             }
         }
 
+
+
         //draw
         //draw deadzone radius
         sf::CircleShape dzradius(DEADZONE_RADIUS, DEADZONE_RADIUS);
@@ -195,6 +200,41 @@ void SerialTypeA::mainLoop()
         tcursor.setOrigin(4,4);
         tcursor.setFillColor(sf::Color::Red);
         tcursor.setPosition( mousePos.x, mousePos.y);
+
+        //slew using mouse
+        if(!dzradius.getGlobalBounds().contains(sf::Vector2f(mousePos)) )
+        {
+            deadzonestate = DZ_OUT;
+        }
+        else if(deadzonestate == DZ_OUT) deadzonestate = DZ_GOINGIN;
+
+        switch(deadzonestate)
+        {
+            case DZ_IN:
+                break;
+
+            case DZ_OUT:
+                debugTransPressed();
+                debugTransForced();
+                debugTransEl( -1*mousePos.y - 128);
+                debugTransAz(mousePos.x - 128);
+                debugTransReleased();
+                break;
+
+            case DZ_GOINGIN:
+                debugTransPressed();
+                debugTransForced();
+                debugTransEl(0);
+                debugTransAz(0);
+                debugTransReleased();
+                deadzonestate = DZ_IN;
+                std::cout << "DZ_TRANSITION\n";
+                break;
+
+            default:
+                break;
+        }
+
 
         screen->draw(dzradius);
         screen->draw(tcursor);
@@ -261,7 +301,7 @@ void SerialTypeA::listenOnActivePort()
 
                 }
 
-                printPacket(&packet);
+                if(PRINTPACKETS) printPacket(&packet);
                 packet.clear();
             }
 

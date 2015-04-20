@@ -17,7 +17,11 @@
 #define DLE 0x10
 #define ETX 0x03
 
+#define PRINTPACKETS 0
+
 #define DEADZONE_RADIUS 16
+
+enum DZState{DZ_IN, DZ_OUT, DZ_GOINGIN};
 
 class SerialTypeA
 {
@@ -39,6 +43,7 @@ private:
 
     //data
     bool menuOpen;
+    bool polarity;
     //used to construct packet full packet with data only, no DLEs or checksums should be in input
     std::vector<uint8_t> constructPacketFromData(std::vector<uint8_t> datap);
     //calculate checksum from data only
