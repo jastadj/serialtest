@@ -17,6 +17,8 @@
 #define DLE 0x10
 #define ETX 0x03
 
+#define DEADZONE_RADIUS 16
+
 class SerialTypeA
 {
 private:

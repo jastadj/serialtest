@@ -2,7 +2,7 @@
 
 SerialTypeA::SerialTypeA()
 {
-    screen = new sf::RenderWindow(sf::VideoMode(640,480,32),"Serial A");
+    screen = new sf::RenderWindow(sf::VideoMode(256,256,32),"Serial A");
 
     activePort = NULL;
     alive = true;
@@ -102,38 +102,7 @@ void SerialTypeA::mainLoop()
 
         screen->clear();
 
-        //handle key presses/releases outside of events
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
-        {
-            elval = 127;
-        }
-        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
-        {
-            elval = -128;
-        }
-        else elval = 0;
-
-        if(sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-        {
-            azval = -128;
-        }
-        else if(sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-        {
-            azval = 127;
-        }
-        else azval = 0;
-
-        if(azval != 0 || elval != 0)
-        {
-            debugTransPressed();
-            debugTransForced();
-            debugTransAz(azval);
-            debugTransEl(elval);
-            debugTransReleased();
-        }
-
-        debugTransReleased();
-
+        sf::Vector2i mousePos = sf::Mouse::getPosition(*screen);
 
         //handle events
         while(screen->pollEvent(event))
@@ -156,12 +125,79 @@ void SerialTypeA::mainLoop()
                 {
                     debugExecute();
                 }
+                else if(event.key.code == sf::Keyboard::Left)
+                {
+                    debugTransPressed();
+                    debugTransForced();
+                    debugTransAz(-127);
+                }
+                else if(event.key.code == sf::Keyboard::Right)
+                {
+                    debugTransPressed();
+                    debugTransForced();
+                    debugTransAz(127);
+                }
+                else if(event.key.code == sf::Keyboard::Up)
+                {
+                    debugTransPressed();
+                    debugTransForced();
+                    debugTransEl(127);
+                }
+                else if(event.key.code == sf::Keyboard::Down)
+                {
+                    debugTransPressed();
+                    debugTransForced();
+                    debugTransEl(-127);
+                }
 
+            }
+            else if(event.type == sf::Event::KeyReleased)
+            {
+                if(event.key.code == sf::Keyboard::Left)
+                {
+                    //debugTransPressed();
+                    //debugTransForced();
+                    debugTransAz(0);
+                    debugTransReleased();
+                }
+                else if(event.key.code == sf::Keyboard::Right)
+                {
+                    //debugTransPressed();
+                    //debugTransForced();
+                    debugTransAz(0);
+                    debugTransReleased();
+                }
+                else if(event.key.code == sf::Keyboard::Up)
+                {
+                    debugTransEl(0);
+                    debugTransReleased();
+                }
+                else if(event.key.code == sf::Keyboard::Down)
+                {
+                    //debugTransEl(0);
+                    debugTransEl(-1);
+                    debugTransReleased();
+                }
             }
         }
 
         //draw
+        //draw deadzone radius
+        sf::CircleShape dzradius(DEADZONE_RADIUS, DEADZONE_RADIUS);
+        dzradius.setOrigin(DEADZONE_RADIUS, DEADZONE_RADIUS);
+        dzradius.setPosition(128,128);
+        dzradius.setOutlineColor(sf::Color::Yellow);
+        dzradius.setFillColor(sf::Color::Black);
+        dzradius.setOutlineThickness(1.0f);
 
+        //draw transducer cursor
+        sf::CircleShape tcursor(4,4);
+        tcursor.setOrigin(4,4);
+        tcursor.setFillColor(sf::Color::Red);
+        tcursor.setPosition( mousePos.x, mousePos.y);
+
+        screen->draw(dzradius);
+        screen->draw(tcursor);
         //display
         screen->display();
     }
