@@ -123,11 +123,15 @@ void SerialTypeA::mainLoop()
         }
         else azval = 0;
 
+        if(azval != 0 || elval != 0)
+        {
+            debugTransPressed();
+            debugTransForced();
+            debugTransAz(azval);
+            debugTransEl(elval);
+            debugTransReleased();
+        }
 
-        debugTransPressed();
-        debugTransForced();
-        debugTransAz(azval);
-        debugTransEl(elval);
         debugTransReleased();
 
 
@@ -206,7 +210,19 @@ void SerialTypeA::listenOnActivePort()
 
                 if(int(packet[1]) == 0x83)
                 {
-                    //if(isBitHigh(packet[2],9)) std::cout << "MENU ON\n";
+                    if(isBitHigh(packet[3],0))
+                    {
+                        std::cout << "MENU ON\n";
+                        menuOpen = true;
+                    }
+                    else
+                    {
+                        std::cout << "MENU OFF\n";
+                        menuOpen = false;
+                    }
+
+
+
                 }
 
                 printPacket(&packet);
@@ -223,12 +239,7 @@ void SerialTypeA::listenOnActivePort()
 
 bool SerialTypeA::isBitHigh(uint8_t byte, int bitnum)
 {
-    int mask = std::pow(2,bitnum);
-
-    std::cout << "mask=" << mask << " - && - " << int(mask&&int(byte)) << std::endl;
-
-
-    return mask&&int(byte);
+    return (byte>>bitnum)&0x01;
 }
 
 void SerialTypeA::printPacket(std::vector<uint8_t> *tpacket)
