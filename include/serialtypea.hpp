@@ -64,6 +64,7 @@ private:
     void debugTransReleased();
     void debugTransAz(int val);
     void debugTransEl(int val);
+    void debugTransKill();
 
     void debugUp();
     void debugDown();
