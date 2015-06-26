@@ -741,7 +741,7 @@ void SerialTypeA::debugudptest()
     {
         std::cout << "Error sending udp disconnect\n";
     }
-    else std::cout << "UDP disconnect sent...\n"
+    else std::cout << "UDP disconnect sent...\n";
 }
 
 
