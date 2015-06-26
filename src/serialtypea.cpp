@@ -95,7 +95,7 @@ uint8_t SerialTypeA::calculateChecksumFromData(std::vector<uint8_t> datap)
     for(int i = 0; i < int(datap.size()); i++) bytesum += int(datap[i]);
 
     //mod 256
-    return uint8_t(bytesum%256);
+    return uint8_t(bytesum%255);
 }
 
 void SerialTypeA::configLoop()
@@ -220,9 +220,16 @@ void SerialTypeA::mainLoop()
                 }
                 else if(event.key.code == sf::Keyboard::Down)
                 {
-                    //debugTransEl(0);
-                    debugTransEl(-1);
+                    debugTransEl(0);
+                    //debugTransEl(-1);
                     debugTransReleased();
+                }
+            }
+            else if(event.type == sf::Event::MouseButtonReleased)
+            {
+                if(event.mouseButton.button == sf::Mouse::Left)
+                {
+                    debugTransKill();
                 }
             }
         }
@@ -251,32 +258,32 @@ void SerialTypeA::mainLoop()
         }
         else if(deadzonestate == DZ_OUT) deadzonestate = DZ_GOINGIN;
 
-        switch(deadzonestate)
+        //handle transition in/out of the deadzone
+        if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
         {
-            case DZ_IN:
-                break;
+            switch(deadzonestate)
+            {
+                case DZ_IN:
+                    break;
 
-            case DZ_OUT:
-                debugTransPressed();
-                debugTransForced();
-                debugTransEl( -1*mousePos.y - 128);
-                debugTransAz(mousePos.x - 128);
-                debugTransReleased();
-                break;
+                case DZ_OUT:
+                    debugTransPressed();
+                    debugTransForced();
+                    debugTransEl( -1*mousePos.y - 128);
+                    debugTransAz(mousePos.x - 128);
+                    debugTransReleased();
+                    break;
 
-            case DZ_GOINGIN:
-                debugTransPressed();
-                debugTransForced();
-                debugTransEl(0);
-                debugTransAz(0);
-                debugTransReleased();
-                deadzonestate = DZ_IN;
-                std::cout << "DZ_TRANSITION\n";
-                break;
+                case DZ_GOINGIN:
+                    debugTransKill();
+                    deadzonestate = DZ_IN;
+                    break;
 
-            default:
-                break;
+                default:
+                    break;
+            }
         }
+
 
 
         screen->draw(dzradius);
@@ -326,23 +333,6 @@ void SerialTypeA::listenOnActivePort()
             if(int(mybuffer) == ETX && int(mybufferprev) == DLE)
             {
                 ofile << std::endl;
-
-                if(int(packet[1]) == 0x83)
-                {
-                    if(isBitHigh(packet[3],0))
-                    {
-                        std::cout << "MENU ON\n";
-                        menuOpen = true;
-                    }
-                    else
-                    {
-                        std::cout << "MENU OFF\n";
-                        menuOpen = false;
-                    }
-
-
-
-                }
 
                 if(PRINTPACKETS) printPacket(&packet);
                 packet.clear();
@@ -751,7 +741,16 @@ void SerialTypeA::debugudptest()
     {
         std::cout << "Error sending udp disconnect\n";
     }
-    else std::cout << "UDP disconnect sent...\n";
+    else std::cout << "UDP disconnect sent...\n"
+}
 
 
+
+void SerialTypeA::debugTransKill()
+{
+    debugTransPressed();
+    debugTransForced();
+    debugTransEl(0);
+    debugTransAz(0);
+    debugTransReleased();
 }
