@@ -7,7 +7,8 @@ SerialTypeA::SerialTypeA()
     activePort = NULL;
     alive = true;
 
-    listenOnPortThread = new sf::Thread(&SerialTypeA::listenOnActivePort, this);
+    //thread for listening on serial port
+    //listenOnPortThread = new sf::Thread(&SerialTypeA::listenOnActivePort, this);
 
     //initialize
     init();
@@ -15,7 +16,11 @@ SerialTypeA::SerialTypeA()
     //for now, hardcoding active port for testing, see enumports
 
     //start listening thread
-    listenOnPortThread->launch();
+    //listenOnPortThread->launch();
+
+    debugudptest();
+
+    //configLoop();
 
     //start main loop
     mainLoop();
@@ -30,6 +35,12 @@ void SerialTypeA::init()
 {
     //get ports
     enumPorts();
+
+    //load font
+    if(!font.loadFromFile(FONT_PATH))
+    {
+        std::cout << "Error loading " << FONT_PATH << std::endl;
+    };
 
     //open logfile
     ofile.open("log.txt");
@@ -85,6 +96,38 @@ uint8_t SerialTypeA::calculateChecksumFromData(std::vector<uint8_t> datap)
 
     //mod 256
     return uint8_t(bytesum%256);
+}
+
+void SerialTypeA::configLoop()
+{
+    bool quit = false;
+
+    sf::Text test("THIS IS A TEST", font, 12);
+    test.setColor(sf::Color::Green);
+
+    while(!quit)
+    {
+        screen->clear();
+
+        sf::Event event;
+
+        while(screen->pollEvent(event))
+        {
+            if(event.type == sf::Event::KeyPressed)
+            {
+                quit = true;
+            }
+
+        }
+
+        //draw
+        screen->draw(test);
+
+
+        screen->display();
+    }
+
+
 }
 
 void SerialTypeA::mainLoop()
@@ -332,6 +375,25 @@ void SerialTypeA::printPacket(std::vector<uint8_t> *tpacket)
     }
 
     std::cout << std::endl;
+}
+
+void SerialTypeA::printPacket(sf::Packet *tpacket)
+{
+    for(int i = 0; i < int(tpacket->getDataSize()); i++)
+    {
+        std::cout << std::dec;
+
+        std::cout << " 0x";
+
+        uint8_t b;
+
+        *tpacket >> b;
+
+
+        if(int( b) < 10) std::cout << "0";
+
+        std::cout << std::hex << int(b);
+    }
 }
 
 ///////////////////////////////////////////////////////
@@ -594,5 +656,102 @@ void SerialTypeA::debugDown()
     {
         activePort->writeToSerialPort(&packet[i], sizeof(uint8_t));
     }
+
+}
+
+void SerialTypeA::debugudptest()
+{
+    //create udp socket
+    sf::UdpSocket socket;
+    socket.setBlocking(false);
+
+    if(socket.bind(40000) != sf::Socket::Done)
+    {
+        std::cout << "Error opening UDP socket\n";
+        return;
+    }
+
+    std::cout << "UDP Socket created\n";
+
+    //IDS address
+    sf::IpAddress recipient = "10.192.100.211";
+    unsigned short port = 36000;
+
+    //request connection
+    std::vector<uint8_t> reqpacket;
+    sf::Packet mypacket;
+    //reqpacket.push_back(0x10);
+    reqpacket.push_back(0x04);
+    reqpacket.push_back(0x00);
+    reqpacket.push_back(0x00);
+    //reqpacket.push_back(0x04);
+    //reqpacket.push_back(DLE);
+    //reqpacket.push_back(ETX);
+    reqpacket = constructPacketFromData(reqpacket);
+
+
+    for(int i = 0; i < int(reqpacket.size()); i++)
+    {
+        mypacket << sf::Uint8( reqpacket[i]);
+        std::cout << sf::Uint8(reqpacket[i]) << std::endl;
+    }
+
+    std::cout << "mypacket size : " << mypacket.getDataSize() << std::endl;
+
+    if(socket.send(mypacket, recipient, port) != sf::Socket::Done)
+    {
+        std::cout << "Error sending connection request\n";
+    }
+    else std::cout << "Connection request sent...\n";
+
+    //await response
+    bool anyresponse = false;
+    sf::IpAddress sender;
+    unsigned short senderport;
+    char data[100];
+    std::size_t received;
+
+    sf::Packet recpacket;
+    sf::Clock mytimeoutclock;
+
+    std::cout << "Awaiting response";
+    while(!anyresponse)
+    {
+        sf::sleep(sf::milliseconds(1000));
+        if( socket.receive(recpacket,sender, senderport) != sf::Socket::Done)
+        {
+            //std::cout << "Error receiving data\n";
+            std::cout << ".";
+        }
+        else
+        {
+            std::cout << "\n";
+            std::cout << "Received " << recpacket.getDataSize() << " bytes from " << sender << " on port " << senderport << std::endl;
+            std::cout << "Connection established.\n";
+
+            printPacket(&recpacket);
+
+            anyresponse = true;
+        }
+
+    }
+
+
+    sf::sleep(sf::milliseconds(1000));
+
+    //udpdisconnect
+    mypacket.clear();
+    reqpacket.clear();
+    reqpacket.push_back(0x04);
+    reqpacket.push_back(0x01);
+    reqpacket = constructPacketFromData(reqpacket);
+    for(int i = 0; i < int(reqpacket.size()); i++) mypacket << sf::Uint8( reqpacket[i]);
+
+    if(socket.send(mypacket,recipient, port) != sf::Socket::Done)
+    {
+        std::cout << "Error sending udp disconnect\n";
+    }
+    else std::cout << "UDP disconnect sent...\n";
+
 
 }

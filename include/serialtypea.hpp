@@ -12,7 +12,10 @@
 #include <cmath>
 
 #include <SFML\Graphics.hpp>
+#include <SFML\Network.hpp>
 #include "serialport.hpp"
+
+#define FONT_PATH ".\\Data\\font.ttf"
 
 #define DLE 0x10
 #define ETX 0x03
@@ -21,6 +24,7 @@
 
 #define DEADZONE_RADIUS 16
 
+//dead zone state
 enum DZState{DZ_IN, DZ_OUT, DZ_GOINGIN};
 
 class SerialTypeA
@@ -30,6 +34,10 @@ private:
     //screen
     sf::RenderWindow *screen;
 
+    //resources
+    sf::Font font;
+
+    //serial
     std::vector<SerialPort*> ports;
     SerialPort *activePort;
     std::ofstream ofile; //log file output
@@ -52,6 +60,7 @@ private:
     //loops
     bool alive;
     void mainLoop();
+    void configLoop();
     void listenOnActivePort();
 
 
@@ -72,11 +81,14 @@ private:
 
     bool isBitHigh(uint8_t byte, int bitnum);
 
+    void debugudptest();
+
 public:
     SerialTypeA();
     ~SerialTypeA();
 
     void printPacket(std::vector<uint8_t> *tpacket);
+    void printPacket(sf::Packet *tpacket);
 
 };
 
